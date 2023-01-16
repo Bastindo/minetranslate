@@ -1,0 +1,60 @@
+#!/usr/bin/python3
+import json
+from googletrans import Translator
+import argparse
+translator = Translator(service_urls=[
+      'translate.google.com',
+      'translate.google.co.kr',
+      'translate.google.de',
+      'translate.google.ca',
+      'translate.google.com.hk',
+    ])
+
+translator = Translator()
+
+def gtranslate(text, dest_lang):
+    try:
+        response = translator.translate(text, dest_lang).text
+        return response
+    except Exception as e:
+        print(f'An error occurred: {e}')
+        return text
+
+def translate_json(json_file, dest_lang):
+    # Open the JSON file
+    with open(json_file, "r") as f:
+        data = json.load(f)
+        
+    i = 0
+        
+    # Translate each value in JSON file
+    for key, value in data.items():
+        print(f'Translating {value} to Destination language {dest_lang}')
+        data[key] = gtranslate(value, dest_lang)
+        
+        # Replace characters like " to avoid issues
+        data[key].replace('"', "“")
+        data[key].replace("％s", "%s")
+        data[key].replace("％ s", "%s")
+        data[key].replace("% s", "%s")
+        
+        print(f'Translated to {data[key]}')
+        
+        i += 1
+        if i % 200 == 0:
+            with open(json_file, "w") as f:
+                json.dump(data, f)
+            print(f'Saving json file ({i}/{len(data)})')
+        
+    # Save the translated JSON file
+    with open(json_file, "w") as f:
+        json.dump(data, f)
+
+# Example usage
+
+parser = argparse.ArgumentParser()
+parser.add_argument("json_file", help="Name of the json file to be translated")
+parser.add_argument("dest_lang", help="Destination language")
+args = parser.parse_args()
+
+translate_json(args.json_file, args.dest_lang)
